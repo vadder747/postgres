@@ -1,0 +1,50 @@
+---
+
+networks:
+  gold-srv1-postgres:
+    name: gold-srv1-postgres
+    driver: bridge
+
+volumes:
+  gold-srv1-postgres:
+    name: gold-srv1-postgres
+  gold-srv1-pgadmin4:
+    name: gold-srv1-pgadmin4
+
+x-logging: &x-logging
+  driver: 'json-file'
+  options:
+    max-file: '5'
+    max-size: '15m'
+
+services:
+  postgres:
+    image: postgres:14.15
+    container_name: gold-srv1-postgres
+    restart: unless-stopped
+    env_file: docker-compose-gold-srv1.env
+    ports:
+      - 127.0.0.1:5432:5432
+    networks:
+      - gold-srv1-postgres
+    volumes:
+      - gold-srv1-postgres:/var/lib/postgresql/data
+    logging: *x-logging
+
+  # http://gold-srv1.iem.technion.ac.il:8080
+  pgadmin4:
+    image: dpage/pgadmin4:latest
+    container_name: gold-srv1-pgadmin4
+    restart: unless-stopped
+    env_file: docker-compose-gold-srv1.env
+    ports:
+      - 8080:80
+    networks:
+      - gold-srv1-postgres
+    volumes:
+      - gold-srv1-pgadmin4:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    profiles:
+      - pgadmin4
+    logging: *x-logging
